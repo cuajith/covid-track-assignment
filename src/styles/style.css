@@ -1,0 +1,18 @@
+.container {
+    border: 1px solid gray;
+    padding: 20px;
+    margin: 20px auto;
+}
+.dropdowns {
+    display: flex;
+    justify-content: space-between;
+    
+    padding: 5px 5px;
+}
+.dropdown-menus {
+    display: flex;
+    justify-content: flex-start;
+}
+.dropdown-menus p {
+    margin: 0px 10px 0px 0px;
+}
