@@ -1,60 +1,114 @@
-import React, { useEffect, useRef } from 'react';
-import * as d3 from 'd3';
+import React, { useEffect, useRef } from "react";
+import * as d3 from "d3";
+import "../../styles/style.css";
 
-const CovidDataGraph = ({data}) => {
+const CovidDataGraph = ({ data }) => {
+  
   const chartRef = useRef(null);
-  console.log(data)
-  const obj = Object.values(data)[1];
-  const totalCount = Object.values(obj)[2];
-  useEffect(() => {
-    const svg = d3.select(chartRef.current);
-    const width = 300;
-    const height = 200;
-    const margin = { top: 20, right: 150, bottom: 30, left: 20 };
+  const newData =
+    data &&
+    data.map(([date, entry]) => {
+      const { delta, delta7, ...total } = entry;
+      return [date, { total }];
+    });
 
+  const newArray =
+    newData &&
+    newData.map(([date, { total }]) => ({
+      date,
+      total: {
+        confirmed: total.total.confirmed,
+        recovered: total.total.recovered,
+      },
+    }));
+  console.log(newArray);
+
+  useEffect(() => {
+  
+    // Ensure data is available
+    if (!data || data.length === 0) {
+      return;
+    }
+
+    // Set up chart dimensions
+    const width = 1000;
+    const height = 400;
+    const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+
+    // Extract data
+    const dates = newArray.map((entry) => entry.date);
+    const confirmedValues = newArray.map((entry) => entry.total.confirmed);
+    const recoveredValues = newArray.map((entry) => entry.total.recovered);
+
+    // Set up scales
     const x = d3
       .scaleBand()
-      .domain(data.map((d) => Object.values(d)[0].length))
-      .range([margin.left, 650 - margin.right])
-      .padding(0.8);
+      .domain(dates)
+      .range([margin.left, width - margin.right])
+      .padding(0.1);
 
     const y = d3
       .scaleLinear()
-      .domain([0, d3.max(data, totalCount.confimed)])
+      .domain([
+        0,
+        d3.max(confirmedValues, (d) => Math.max(d, ...recoveredValues)),
+      ])
       .nice()
-      .range([height - margin.bottom, margin.top])
+      .range([height - margin.bottom, margin.top]);
 
-      const line = d3
+    // Create a line function
+    const line = d3
       .line()
-      .x((d, i) => x(i))
+      .x((d, i) => x(dates[i]) + x.bandwidth() / 2)
       .y((d) => y(d))
       .curve(d3.curveCatmullRom.alpha(0.5));
-      
+
+    // Select chart container
+    const svg = d3.select(chartRef.current);
+
+    // Clear previous elements
     svg.selectAll("*").remove();
 
-
-    svg
-      .selectAll("rect")
-      .data(data)
-      .enter()
-      .append("rect")
-      .attr("x", (d) => Object.values(d)[0].length)
-      .attr("y", totalCount.confirmed)
-      .attr("width", x.bandwidth())
-      .attr("height", totalCount.confirmed)
-      .attr("fill", "forestgreen");
-
+    // Append axes
     svg
       .append("g")
-      .attr("transform", `translate(0,${height - margin.bottom})`)
+      .attr("transform", `translate(0, ${height - margin.bottom})`)
       .call(d3.axisBottom(x));
 
     svg
       .append("g")
-      .attr("transform", `translate(${margin.left},0)`)
-      // .call(d3.axisLeft(y));
-  }, [data])
-  return <svg ref={chartRef} width={600} height={400}></svg>;
-}
+      .attr("transform", `translate(${margin.left}, 0)`)
+      .call(d3.axisLeft(y));
 
-export default CovidDataGraph
+    // Append lines
+    svg
+      .append("path")
+      .datum(confirmedValues)
+      .attr("fill", "none")
+      .attr("stroke", "blue")
+      .attr("stroke-width", 2)
+      .attr("d", line);
+
+    svg
+      .append("path")
+      .datum(recoveredValues)
+      .attr("fill", "none")
+      .attr("stroke", "green")
+      .attr("stroke-width", 2)
+      .attr("d", line);
+  }, [newArray]);
+  return (
+    <div className="covid-graph">
+      <svg ref={chartRef}></svg>
+      <div className="container-style">
+        <div className="box-style"></div>
+        <p>Confirmed</p>
+
+        <div className="box-style recovered"></div>
+        <p>Recovered</p>
+      </div>
+    </div>
+  );
+};
+
+export default CovidDataGraph;

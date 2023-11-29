@@ -16,3 +16,25 @@
 .dropdown-menus p {
     margin: 0px 10px 0px 0px;
 }
+.container-style {
+    display: flex;
+    margin: 10px 35px;
+}
+.box-style {
+    background-color: blue;
+    color: white;
+    border-radius: 5px;
+    width: 25px;
+    height: 25px;
+    margin: 0px 10px;
+}
+.recovered {
+    background-color: forestgreen;
+}
+.covid-graph {
+    margin: 30px 0px;
+}
+.covid-graph svg {
+    height: 400px;
+    width: 1000px;
+}
